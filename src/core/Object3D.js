@@ -96,6 +96,10 @@ class Object3D extends EventDispatcher {
 
 		this.matrix = new Matrix4();
 		this.matrixWorld = new Matrix4();
+		this._positionCache = new Vector3();
+		this._quaternionCache = new Quaternion();
+		this._scaleCache = new Vector3().copy( scale );
+
 
 		this.matrixAutoUpdate = Object3D.DEFAULT_MATRIX_AUTO_UPDATE;
 
@@ -563,9 +567,18 @@ class Object3D extends EventDispatcher {
 
 	updateMatrix() {
 
-		this.matrix.compose( this.position, this.quaternion, this.scale );
 
-		this.matrixWorldNeedsUpdate = true;
+		if ( ! this._positionCache.near( this.position, 0.0001 ) || ! this._quaternionCache.near( this.quaternion, 0.0001 ) || ! this._scaleCache.near( this.scale, 0.0001 ) ) {
+
+			this.matrix.compose( this.position, this.quaternion, this.scale );
+
+			this.matrixWorldNeedsUpdate = true;
+
+			this._positionCache.copy( this.position );
+			this._quaternionCache.copy( this.quaternion );
+			this._scaleCache.copy( this.scale );
+
+		}
 
 	}
 
@@ -573,7 +586,7 @@ class Object3D extends EventDispatcher {
 
 		if ( this.matrixAutoUpdate ) this.updateMatrix();
 
-		if ( this.matrixWorldNeedsUpdate || force ) {
+		if ( this.matrixWorldNeedsUpdate || this.matrixWorldAutoUpdate === true || force ) {
 
 			if ( this.parent === null ) {
 

@@ -618,6 +618,15 @@ class Quaternion {
 
 	}
 
+	near( quaternion, eps = Number.EPSILON ) {
+
+		return ( Math.abs( quaternion._x - this._x ) < eps ) &&
+			( Math.abs( quaternion._y - this._y ) < eps ) &&
+			( Math.abs( quaternion._z - this._z ) < eps ) &&
+			( Math.abs( quaternion._w - this._w ) < eps );
+
+	}
+
 	fromArray( array, offset = 0 ) {
 
 		this._x = array[ offset ];

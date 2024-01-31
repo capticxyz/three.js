@@ -1,4 +1,5 @@
 import { Vector3 } from '../math/Vector3.js';
+import { Matrix4 } from '../math/Matrix4.js';
 import { Quaternion } from '../math/Quaternion.js';
 import { Clock } from '../core/Clock.js';
 import { Object3D } from '../core/Object3D.js';
@@ -8,7 +9,8 @@ const _position = /*@__PURE__*/ new Vector3();
 const _quaternion = /*@__PURE__*/ new Quaternion();
 const _scale = /*@__PURE__*/ new Vector3();
 const _orientation = /*@__PURE__*/ new Vector3();
-
+const _m1 = /*@__PURE__*/ new Matrix4();
+const _epsilon = 1.0;
 class AudioListener extends Object3D {
 
 	constructor() {
@@ -103,30 +105,39 @@ class AudioListener extends Object3D {
 
 		this.timeDelta = this._clock.getDelta();
 
-		this.matrixWorld.decompose( _position, _quaternion, _scale );
+		if ( ! this.matrixWorld.near( _m1, _epsilon ) ) {
 
-		_orientation.set( 0, 0, - 1 ).applyQuaternion( _quaternion );
+			_m1.copy( this.matrixWorld.clone() );
 
-		if ( listener.positionX ) {
+    		this.matrixWorld.decompose( _position, _quaternion, _scale );
+			if ( ! isNaN( _position.x ) && ! isNaN( _position.y ) && ! isNaN( _position.z ) ) {
 
-			// code path for Chrome (see #14393)
+				_orientation.set( 0, 0, - 1 ).applyQuaternion( _quaternion );
 
-			const endTime = this.context.currentTime + this.timeDelta;
+				if ( listener.positionX ) {
 
-			listener.positionX.linearRampToValueAtTime( _position.x, endTime );
-			listener.positionY.linearRampToValueAtTime( _position.y, endTime );
-			listener.positionZ.linearRampToValueAtTime( _position.z, endTime );
-			listener.forwardX.linearRampToValueAtTime( _orientation.x, endTime );
-			listener.forwardY.linearRampToValueAtTime( _orientation.y, endTime );
-			listener.forwardZ.linearRampToValueAtTime( _orientation.z, endTime );
-			listener.upX.linearRampToValueAtTime( up.x, endTime );
-			listener.upY.linearRampToValueAtTime( up.y, endTime );
-			listener.upZ.linearRampToValueAtTime( up.z, endTime );
+					// code path for Chrome (see #14393)
 
-		} else {
+					const endTime = this.context.currentTime + this.timeDelta;
 
-			listener.setPosition( _position.x, _position.y, _position.z );
-			listener.setOrientation( _orientation.x, _orientation.y, _orientation.z, up.x, up.y, up.z );
+					listener.positionX.linearRampToValueAtTime( _position.x, endTime );
+					listener.positionY.linearRampToValueAtTime( _position.y, endTime );
+					listener.positionZ.linearRampToValueAtTime( _position.z, endTime );
+					listener.forwardX.linearRampToValueAtTime( _orientation.x, endTime );
+					listener.forwardY.linearRampToValueAtTime( _orientation.y, endTime );
+					listener.forwardZ.linearRampToValueAtTime( _orientation.z, endTime );
+					listener.upX.linearRampToValueAtTime( up.x, endTime );
+					listener.upY.linearRampToValueAtTime( up.y, endTime );
+					listener.upZ.linearRampToValueAtTime( up.z, endTime );
+
+				} else {
+
+					listener.setPosition( _position.x, _position.y, _position.z );
+					listener.setOrientation( _orientation.x, _orientation.y, _orientation.z, up.x, up.y, up.z );
+
+				}
+
+			}
 
 		}
 

@@ -923,7 +923,7 @@ class WebGLRenderer {
 
 		function prepareMaterial( material, scene, object ) {
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false && object.userData.hasOwnProperty( 'twoCalls' ) ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;
@@ -1571,7 +1571,7 @@ class WebGLRenderer {
 
 			material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false && object.userData.hasOwnProperty( 'twoCalls' ) ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;

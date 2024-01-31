@@ -3830,6 +3830,15 @@ class Quaternion {
 
 	}
 
+	near( quaternion, eps = Number.EPSILON ) {
+
+		return ( Math.abs( quaternion._x - this._x ) < eps ) &&
+			( Math.abs( quaternion._y - this._y ) < eps ) &&
+			( Math.abs( quaternion._z - this._z ) < eps ) &&
+			( Math.abs( quaternion._w - this._w ) < eps );
+
+	}
+
 	fromArray( array, offset = 0 ) {
 
 		this._x = array[ offset ];
@@ -4542,6 +4551,14 @@ class Vector3 {
 	equals( v ) {
 
 		return ( ( v.x === this.x ) && ( v.y === this.y ) && ( v.z === this.z ) );
+
+	}
+
+	near( v, eps = Number.EPSILON ) {
+
+		return ( Math.abs( v.x - this.x ) < eps ) &&
+			( Math.abs( v.y - this.y ) < eps ) &&
+			( Math.abs( v.z - this.z ) < eps );
 
 	}
 
@@ -6621,25 +6638,25 @@ class Matrix4 {
 		position.z = te[ 14 ];
 
 		// scale the rotation part
-		_m1$2.copy( this );
+		_m1$4.copy( this );
 
 		const invSX = 1 / sx;
 		const invSY = 1 / sy;
 		const invSZ = 1 / sz;
 
-		_m1$2.elements[ 0 ] *= invSX;
-		_m1$2.elements[ 1 ] *= invSX;
-		_m1$2.elements[ 2 ] *= invSX;
+		_m1$4.elements[ 0 ] *= invSX;
+		_m1$4.elements[ 1 ] *= invSX;
+		_m1$4.elements[ 2 ] *= invSX;
 
-		_m1$2.elements[ 4 ] *= invSY;
-		_m1$2.elements[ 5 ] *= invSY;
-		_m1$2.elements[ 6 ] *= invSY;
+		_m1$4.elements[ 4 ] *= invSY;
+		_m1$4.elements[ 5 ] *= invSY;
+		_m1$4.elements[ 6 ] *= invSY;
 
-		_m1$2.elements[ 8 ] *= invSZ;
-		_m1$2.elements[ 9 ] *= invSZ;
-		_m1$2.elements[ 10 ] *= invSZ;
+		_m1$4.elements[ 8 ] *= invSZ;
+		_m1$4.elements[ 9 ] *= invSZ;
+		_m1$4.elements[ 10 ] *= invSZ;
 
-		quaternion.setFromRotationMatrix( _m1$2 );
+		quaternion.setFromRotationMatrix( _m1$4 );
 
 		scale.x = sx;
 		scale.y = sy;
@@ -6737,6 +6754,22 @@ class Matrix4 {
 
 	}
 
+	near( matrix, eps = Number.EPSILON ) {
+
+		const te = this.elements;
+		const me = matrix.elements;
+
+		for ( let i = 0; i < 16; i ++ ) {
+
+			if ( Math.abs( te[ i ] - me[ i ] ) >= eps ) return false;
+
+		}
+
+		return true;
+
+	}
+
+
 	fromArray( array, offset = 0 ) {
 
 		for ( let i = 0; i < 16; i ++ ) {
@@ -6780,7 +6813,7 @@ class Matrix4 {
 }
 
 const _v1$5 = /*@__PURE__*/ new Vector3();
-const _m1$2 = /*@__PURE__*/ new Matrix4();
+const _m1$4 = /*@__PURE__*/ new Matrix4();
 const _zero = /*@__PURE__*/ new Vector3( 0, 0, 0 );
 const _one = /*@__PURE__*/ new Vector3( 1, 1, 1 );
 const _x = /*@__PURE__*/ new Vector3();
@@ -7159,7 +7192,7 @@ let _object3DId = 0;
 
 const _v1$4 = /*@__PURE__*/ new Vector3();
 const _q1 = /*@__PURE__*/ new Quaternion();
-const _m1$1 = /*@__PURE__*/ new Matrix4();
+const _m1$3 = /*@__PURE__*/ new Matrix4();
 const _target = /*@__PURE__*/ new Vector3();
 
 const _position$3 = /*@__PURE__*/ new Vector3();
@@ -7244,6 +7277,10 @@ class Object3D extends EventDispatcher {
 
 		this.matrix = new Matrix4();
 		this.matrixWorld = new Matrix4();
+		this._positionCache = new Vector3();
+		this._quaternionCache = new Quaternion();
+		this._scaleCache = new Vector3().copy( scale );
+
 
 		this.matrixAutoUpdate = Object3D.DEFAULT_MATRIX_AUTO_UPDATE;
 
@@ -7409,7 +7446,7 @@ class Object3D extends EventDispatcher {
 
 		this.updateWorldMatrix( true, false );
 
-		return vector.applyMatrix4( _m1$1.copy( this.matrixWorld ).invert() );
+		return vector.applyMatrix4( _m1$3.copy( this.matrixWorld ).invert() );
 
 	}
 
@@ -7435,20 +7472,20 @@ class Object3D extends EventDispatcher {
 
 		if ( this.isCamera || this.isLight ) {
 
-			_m1$1.lookAt( _position$3, _target, this.up );
+			_m1$3.lookAt( _position$3, _target, this.up );
 
 		} else {
 
-			_m1$1.lookAt( _target, _position$3, this.up );
+			_m1$3.lookAt( _target, _position$3, this.up );
 
 		}
 
-		this.quaternion.setFromRotationMatrix( _m1$1 );
+		this.quaternion.setFromRotationMatrix( _m1$3 );
 
 		if ( parent ) {
 
-			_m1$1.extractRotation( parent.matrixWorld );
-			_q1.setFromRotationMatrix( _m1$1 );
+			_m1$3.extractRotation( parent.matrixWorld );
+			_q1.setFromRotationMatrix( _m1$3 );
 			this.quaternion.premultiply( _q1.invert() );
 
 		}
@@ -7556,17 +7593,17 @@ class Object3D extends EventDispatcher {
 
 		this.updateWorldMatrix( true, false );
 
-		_m1$1.copy( this.matrixWorld ).invert();
+		_m1$3.copy( this.matrixWorld ).invert();
 
 		if ( object.parent !== null ) {
 
 			object.parent.updateWorldMatrix( true, false );
 
-			_m1$1.multiply( object.parent.matrixWorld );
+			_m1$3.multiply( object.parent.matrixWorld );
 
 		}
 
-		object.applyMatrix4( _m1$1 );
+		object.applyMatrix4( _m1$3 );
 
 		this.add( object );
 
@@ -7711,9 +7748,18 @@ class Object3D extends EventDispatcher {
 
 	updateMatrix() {
 
-		this.matrix.compose( this.position, this.quaternion, this.scale );
 
-		this.matrixWorldNeedsUpdate = true;
+		if ( ! this._positionCache.near( this.position, 0.0001 ) || ! this._quaternionCache.near( this.quaternion, 0.0001 ) || ! this._scaleCache.near( this.scale, 0.0001 ) ) {
+
+			this.matrix.compose( this.position, this.quaternion, this.scale );
+
+			this.matrixWorldNeedsUpdate = true;
+
+			this._positionCache.copy( this.position );
+			this._quaternionCache.copy( this.quaternion );
+			this._scaleCache.copy( this.scale );
+
+		}
 
 	}
 
@@ -7721,7 +7767,7 @@ class Object3D extends EventDispatcher {
 
 		if ( this.matrixAutoUpdate ) this.updateMatrix();
 
-		if ( this.matrixWorldNeedsUpdate || force ) {
+		if ( this.matrixWorldNeedsUpdate || this.matrixWorldAutoUpdate === true || force ) {
 
 			if ( this.parent === null ) {
 
@@ -10470,7 +10516,7 @@ class Float64BufferAttribute extends BufferAttribute {
 
 let _id$2 = 0;
 
-const _m1 = /*@__PURE__*/ new Matrix4();
+const _m1$2 = /*@__PURE__*/ new Matrix4();
 const _obj = /*@__PURE__*/ new Object3D();
 const _offset = /*@__PURE__*/ new Vector3();
 const _box$2 = /*@__PURE__*/ new Box3();
@@ -10636,9 +10682,9 @@ class BufferGeometry extends EventDispatcher {
 
 	applyQuaternion( q ) {
 
-		_m1.makeRotationFromQuaternion( q );
+		_m1$2.makeRotationFromQuaternion( q );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -10648,9 +10694,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world x-axis
 
-		_m1.makeRotationX( angle );
+		_m1$2.makeRotationX( angle );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -10660,9 +10706,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world y-axis
 
-		_m1.makeRotationY( angle );
+		_m1$2.makeRotationY( angle );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -10672,9 +10718,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world z-axis
 
-		_m1.makeRotationZ( angle );
+		_m1$2.makeRotationZ( angle );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -10684,9 +10730,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// translate geometry
 
-		_m1.makeTranslation( x, y, z );
+		_m1$2.makeTranslation( x, y, z );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -10696,9 +10742,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// scale geometry
 
-		_m1.makeScale( x, y, z );
+		_m1$2.makeScale( x, y, z );
 
-		this.applyMatrix4( _m1 );
+		this.applyMatrix4( _m1$2 );
 
 		return this;
 
@@ -24037,7 +24083,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	const isWebGL2 = capabilities.isWebGL2;
 	const multisampledRTTExt = extensions.has( 'WEBGL_multisampled_render_to_texture' ) ? extensions.get( 'WEBGL_multisampled_render_to_texture' ) : null;
 	const supportsInvalidateFramebuffer = typeof navigator === 'undefined' ? false : /OculusBrowser/g.test( navigator.userAgent );
-
+    //https://discourse.threejs.org/t/workaround-of-webglstate-texture-error-on-iphone-ipad-macos-16-4/50519 not needed when we switch to webgl2 on ios
+    const isIOSSafariGreaterThan16_4 = /iPad|iPhone|iPod/.test( navigator.userAgent ) && /Version\/(\d+)\.(\d+)/.test( navigator.userAgent ) && parseFloat( RegExp.$1 + '.' + RegExp.$2 ) >= 16.4;
 	const _videoTextures = new WeakMap();
 	let _canvas;
 
@@ -24141,6 +24188,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	function textureNeedsPowerOfTwo( texture ) {
 
 		if ( isWebGL2 ) return false;
+		if ( isIOSSafariGreaterThan16_4 ) return false;
 
 		return ( texture.wrapS !== ClampToEdgeWrapping || texture.wrapT !== ClampToEdgeWrapping ) ||
 			( texture.minFilter !== NearestFilter && texture.minFilter !== LinearFilter );
@@ -26966,10 +27014,11 @@ class WebXRManager extends EventDispatcher {
 		let referenceSpace = null;
 		let referenceSpaceType = 'local-floor';
 		// Set default foveation to maximum.
-		let foveation = 1.0;
+		let foveation = 0.0;
 		let customReferenceSpace = null;
 
 		let pose = null;
+		const layers = [];
 		let glBinding = null;
 		let glProjLayer = null;
 		let glBaseLayer = null;
@@ -27009,9 +27058,16 @@ class WebXRManager extends EventDispatcher {
 		//
 
 		this.cameraAutoUpdate = true;
+		this.layersEnabled = false;
 		this.enabled = false;
 
 		this.isPresenting = false;
+
+		this.getCameraPose = function () {
+
+			return pose;
+
+		};
 
 		this.getController = function ( index ) {
 
@@ -27318,6 +27374,28 @@ class WebXRManager extends EventDispatcher {
 
 			}
 
+		};
+
+		this.addLayer = function(layer) {
+			if (!window.XRWebGLBinding || !this.layersEnabled || !session) { return; }
+
+			layers.push( layer );
+			this.updateLayers();
+		};
+
+		this.removeLayer = function(layer) {
+
+			layers.splice( layers.indexOf(layer), 1 );
+			if (!window.XRWebGLBinding || !this.layersEnabled || !session) { return; }
+
+			this.updateLayers();
+		};
+
+		this.updateLayers = function() {
+			var layersCopy = layers.map(function (x) { return x; });
+
+			layersCopy.unshift( session.renderState.layers[0] );
+			session.updateRenderState( { layers: layersCopy } );
 		};
 
 		function onInputSourcesChange( event ) {
@@ -29573,7 +29651,7 @@ class WebGLRenderer {
 
 		function prepareMaterial( material, scene, object ) {
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false && object.userData.hasOwnProperty( 'twoCalls' ) ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;
@@ -30221,7 +30299,7 @@ class WebGLRenderer {
 
 			material.onBeforeRender( _this, scene, camera, geometry, object, group );
 
-			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false ) {
+			if ( material.transparent === true && material.side === DoubleSide && material.forceSinglePass === false && object.userData.hasOwnProperty( 'twoCalls' ) ) {
 
 				material.side = BackSide;
 				material.needsUpdate = true;
@@ -47441,7 +47519,8 @@ const _position$1 = /*@__PURE__*/ new Vector3();
 const _quaternion$1 = /*@__PURE__*/ new Quaternion();
 const _scale$1 = /*@__PURE__*/ new Vector3();
 const _orientation$1 = /*@__PURE__*/ new Vector3();
-
+const _m1$1 = /*@__PURE__*/ new Matrix4();
+const _epsilon$1 = 1.0;
 class AudioListener extends Object3D {
 
 	constructor() {
@@ -47536,30 +47615,39 @@ class AudioListener extends Object3D {
 
 		this.timeDelta = this._clock.getDelta();
 
-		this.matrixWorld.decompose( _position$1, _quaternion$1, _scale$1 );
+		if ( ! this.matrixWorld.near( _m1$1, _epsilon$1 ) ) {
 
-		_orientation$1.set( 0, 0, - 1 ).applyQuaternion( _quaternion$1 );
+			_m1$1.copy( this.matrixWorld.clone() );
 
-		if ( listener.positionX ) {
+    		this.matrixWorld.decompose( _position$1, _quaternion$1, _scale$1 );
+			if ( ! isNaN( _position$1.x ) && ! isNaN( _position$1.y ) && ! isNaN( _position$1.z ) ) {
 
-			// code path for Chrome (see #14393)
+				_orientation$1.set( 0, 0, - 1 ).applyQuaternion( _quaternion$1 );
 
-			const endTime = this.context.currentTime + this.timeDelta;
+				if ( listener.positionX ) {
 
-			listener.positionX.linearRampToValueAtTime( _position$1.x, endTime );
-			listener.positionY.linearRampToValueAtTime( _position$1.y, endTime );
-			listener.positionZ.linearRampToValueAtTime( _position$1.z, endTime );
-			listener.forwardX.linearRampToValueAtTime( _orientation$1.x, endTime );
-			listener.forwardY.linearRampToValueAtTime( _orientation$1.y, endTime );
-			listener.forwardZ.linearRampToValueAtTime( _orientation$1.z, endTime );
-			listener.upX.linearRampToValueAtTime( up.x, endTime );
-			listener.upY.linearRampToValueAtTime( up.y, endTime );
-			listener.upZ.linearRampToValueAtTime( up.z, endTime );
+					// code path for Chrome (see #14393)
 
-		} else {
+					const endTime = this.context.currentTime + this.timeDelta;
 
-			listener.setPosition( _position$1.x, _position$1.y, _position$1.z );
-			listener.setOrientation( _orientation$1.x, _orientation$1.y, _orientation$1.z, up.x, up.y, up.z );
+					listener.positionX.linearRampToValueAtTime( _position$1.x, endTime );
+					listener.positionY.linearRampToValueAtTime( _position$1.y, endTime );
+					listener.positionZ.linearRampToValueAtTime( _position$1.z, endTime );
+					listener.forwardX.linearRampToValueAtTime( _orientation$1.x, endTime );
+					listener.forwardY.linearRampToValueAtTime( _orientation$1.y, endTime );
+					listener.forwardZ.linearRampToValueAtTime( _orientation$1.z, endTime );
+					listener.upX.linearRampToValueAtTime( up.x, endTime );
+					listener.upY.linearRampToValueAtTime( up.y, endTime );
+					listener.upZ.linearRampToValueAtTime( up.z, endTime );
+
+				} else {
+
+					listener.setPosition( _position$1.x, _position$1.y, _position$1.z );
+					listener.setOrientation( _orientation$1.x, _orientation$1.y, _orientation$1.z, up.x, up.y, up.z );
+
+				}
+
+			}
 
 		}
 
@@ -47968,6 +48056,8 @@ const _position = /*@__PURE__*/ new Vector3();
 const _quaternion = /*@__PURE__*/ new Quaternion();
 const _scale = /*@__PURE__*/ new Vector3();
 const _orientation = /*@__PURE__*/ new Vector3();
+const _m1 = /*@__PURE__*/ new Matrix4();
+const _epsilon = 1.0;
 
 class PositionalAudio extends Audio {
 
@@ -47976,7 +48066,7 @@ class PositionalAudio extends Audio {
 		super( listener );
 
 		this.panner = this.context.createPanner();
-		this.panner.panningModel = 'HRTF';
+		this.panner.panningModel = 'equalpower'; // 'HRTF';
 		this.panner.connect( this.gain );
 
 	}
@@ -48075,33 +48165,43 @@ class PositionalAudio extends Audio {
 
 		if ( this.hasPlaybackControl === true && this.isPlaying === false ) return;
 
-		this.matrixWorld.decompose( _position, _quaternion, _scale );
+		if ( ! this.matrixWorld.near( _m1, _epsilon ) ) {
 
-		_orientation.set( 0, 0, 1 ).applyQuaternion( _quaternion );
+			_m1.copy( this.matrixWorld.clone() );
 
-		const panner = this.panner;
+			this.matrixWorld.decompose( _position, _quaternion, _scale );
+			if ( ! isNaN( _position.x ) && ! isNaN( _position.y ) && ! isNaN( _position.z ) ) {
 
-		if ( panner.positionX ) {
+				_orientation.set( 0, 0, 1 ).applyQuaternion( _quaternion );
 
-			// code path for Chrome and Firefox (see #14393)
+				const panner = this.panner;
 
-			const endTime = this.context.currentTime + this.listener.timeDelta;
+				if ( panner.positionX ) {
 
-			panner.positionX.linearRampToValueAtTime( _position.x, endTime );
-			panner.positionY.linearRampToValueAtTime( _position.y, endTime );
-			panner.positionZ.linearRampToValueAtTime( _position.z, endTime );
-			panner.orientationX.linearRampToValueAtTime( _orientation.x, endTime );
-			panner.orientationY.linearRampToValueAtTime( _orientation.y, endTime );
-			panner.orientationZ.linearRampToValueAtTime( _orientation.z, endTime );
+				    // code path for Chrome and Firefox (see #14393)
 
-		} else {
+					const endTime = this.context.currentTime + this.listener.timeDelta;
 
-			panner.setPosition( _position.x, _position.y, _position.z );
-			panner.setOrientation( _orientation.x, _orientation.y, _orientation.z );
+					panner.positionX.linearRampToValueAtTime( _position.x, endTime );
+					panner.positionY.linearRampToValueAtTime( _position.y, endTime );
+					panner.positionZ.linearRampToValueAtTime( _position.z, endTime );
+					panner.orientationX.linearRampToValueAtTime( _orientation.x, endTime );
+					panner.orientationY.linearRampToValueAtTime( _orientation.y, endTime );
+					panner.orientationZ.linearRampToValueAtTime( _orientation.z, endTime );
+
+				} else {
+
+					panner.setPosition( _position.x, _position.y, _position.z );
+					panner.setOrientation( _orientation.x, _orientation.y, _orientation.z );
+
+				}
+
+			}
 
 		}
 
 	}
+
 
 }
 

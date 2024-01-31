@@ -9,7 +9,8 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	const isWebGL2 = capabilities.isWebGL2;
 	const multisampledRTTExt = extensions.has( 'WEBGL_multisampled_render_to_texture' ) ? extensions.get( 'WEBGL_multisampled_render_to_texture' ) : null;
 	const supportsInvalidateFramebuffer = typeof navigator === 'undefined' ? false : /OculusBrowser/g.test( navigator.userAgent );
-
+    //https://discourse.threejs.org/t/workaround-of-webglstate-texture-error-on-iphone-ipad-macos-16-4/50519 not needed when we switch to webgl2 on ios
+    const isIOSSafariGreaterThan16_4 = /iPad|iPhone|iPod/.test( navigator.userAgent ) && /Version\/(\d+)\.(\d+)/.test( navigator.userAgent ) && parseFloat( RegExp.$1 + '.' + RegExp.$2 ) >= 16.4;
 	const _videoTextures = new WeakMap();
 	let _canvas;
 
@@ -113,6 +114,7 @@ function WebGLTextures( _gl, extensions, state, properties, capabilities, utils,
 	function textureNeedsPowerOfTwo( texture ) {
 
 		if ( isWebGL2 ) return false;
+		if ( isIOSSafariGreaterThan16_4 ) return false;
 
 		return ( texture.wrapS !== ClampToEdgeWrapping || texture.wrapT !== ClampToEdgeWrapping ) ||
 			( texture.minFilter !== NearestFilter && texture.minFilter !== LinearFilter );

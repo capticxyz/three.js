@@ -27,10 +27,11 @@ class WebXRManager extends EventDispatcher {
 		let referenceSpace = null;
 		let referenceSpaceType = 'local-floor';
 		// Set default foveation to maximum.
-		let foveation = 1.0;
+		let foveation = 0.0;
 		let customReferenceSpace = null;
 
 		let pose = null;
+		const layers = [];
 		let glBinding = null;
 		let glProjLayer = null;
 		let glBaseLayer = null;
@@ -70,9 +71,16 @@ class WebXRManager extends EventDispatcher {
 		//
 
 		this.cameraAutoUpdate = true;
+		this.layersEnabled = false;
 		this.enabled = false;
 
 		this.isPresenting = false;
+
+		this.getCameraPose = function () {
+
+			return pose;
+
+		};
 
 		this.getController = function ( index ) {
 
@@ -380,6 +388,28 @@ class WebXRManager extends EventDispatcher {
 			}
 
 		};
+
+		this.addLayer = function(layer) {
+			if (!window.XRWebGLBinding || !this.layersEnabled || !session) { return; }
+
+			layers.push( layer );
+			this.updateLayers();
+		}
+
+		this.removeLayer = function(layer) {
+
+			layers.splice( layers.indexOf(layer), 1 );
+			if (!window.XRWebGLBinding || !this.layersEnabled || !session) { return; }
+
+			this.updateLayers();
+		}
+
+		this.updateLayers = function() {
+			var layersCopy = layers.map(function (x) { return x; });
+
+			layersCopy.unshift( session.renderState.layers[0] );
+			session.updateRenderState( { layers: layersCopy } );
+		}
 
 		function onInputSourcesChange( event ) {
 

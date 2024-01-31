@@ -70,6 +70,8 @@ import {
 	KHR_DF_PRIMARIES_DISPLAYP3
 } from '../libs/ktx-parse.module.js';
 import { ZSTDDecoder } from '../libs/zstddec.module.js';
+import { basisBin } from '../libs/basis.module.js';
+import BasisEncoderModuleSRC from 'raw-loader!../libs/basis/basis_transcoder.js';
 
 const _taskCache = new WeakMap();
 
@@ -177,20 +179,7 @@ class KTX2Loader extends Loader {
 
 		if ( ! this.transcoderPending ) {
 
-			// Load transcoder wrapper.
-			const jsLoader = new FileLoader( this.manager );
-			jsLoader.setPath( this.transcoderPath );
-			jsLoader.setWithCredentials( this.withCredentials );
-			const jsContent = jsLoader.loadAsync( 'basis_transcoder.js' );
-
-			// Load transcoder WASM binary.
-			const binaryLoader = new FileLoader( this.manager );
-			binaryLoader.setPath( this.transcoderPath );
-			binaryLoader.setResponseType( 'arraybuffer' );
-			binaryLoader.setWithCredentials( this.withCredentials );
-			const binaryContent = binaryLoader.loadAsync( 'basis_transcoder.wasm' );
-
-			this.transcoderPending = Promise.all( [ jsContent, binaryContent ] )
+			this.transcoderPending = Promise.all( [ BasisEncoderModuleSRC, basisBin ] )
 				.then( ( [ jsContent, binaryContent ] ) => {
 
 					const fn = KTX2Loader.BasisWorker.toString();
