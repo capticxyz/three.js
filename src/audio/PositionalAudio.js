@@ -7,8 +7,7 @@ const _position = /*@__PURE__*/ new Vector3();
 const _quaternion = /*@__PURE__*/ new Quaternion();
 const _scale = /*@__PURE__*/ new Vector3();
 const _orientation = /*@__PURE__*/ new Vector3();
-const _m1 = /*@__PURE__*/ new Matrix4();
-const _epsilon = 1.0;
+const _epsilon = 0.5;
 
 class PositionalAudio extends Audio {
 
@@ -19,6 +18,7 @@ class PositionalAudio extends Audio {
 		this.panner = this.context.createPanner();
 		this.panner.panningModel = 'equalpower'; // 'HRTF';
 		this.panner.connect( this.gain );
+                this.lastMatrixWorld = new Matrix4();
 
 	}
 
@@ -116,9 +116,9 @@ class PositionalAudio extends Audio {
 
 		if ( this.hasPlaybackControl === true && this.isPlaying === false ) return;
 
-		if ( ! this.matrixWorld.near( _m1, _epsilon ) ) {
+		if ( ! this.matrixWorld.near( this.lastMatrixWorld, _epsilon ) ) {
 
-			_m1.copy( this.matrixWorld.clone() );
+			this.lastMatrixWorld.copy( this.matrixWorld.clone() );
 
 			this.matrixWorld.decompose( _position, _quaternion, _scale );
 			if ( ! isNaN( _position.x ) && ! isNaN( _position.y ) && ! isNaN( _position.z ) ) {

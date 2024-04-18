@@ -6638,25 +6638,25 @@ class Matrix4 {
 		position.z = te[ 14 ];
 
 		// scale the rotation part
-		_m1$4.copy( this );
+		_m1$3.copy( this );
 
 		const invSX = 1 / sx;
 		const invSY = 1 / sy;
 		const invSZ = 1 / sz;
 
-		_m1$4.elements[ 0 ] *= invSX;
-		_m1$4.elements[ 1 ] *= invSX;
-		_m1$4.elements[ 2 ] *= invSX;
+		_m1$3.elements[ 0 ] *= invSX;
+		_m1$3.elements[ 1 ] *= invSX;
+		_m1$3.elements[ 2 ] *= invSX;
 
-		_m1$4.elements[ 4 ] *= invSY;
-		_m1$4.elements[ 5 ] *= invSY;
-		_m1$4.elements[ 6 ] *= invSY;
+		_m1$3.elements[ 4 ] *= invSY;
+		_m1$3.elements[ 5 ] *= invSY;
+		_m1$3.elements[ 6 ] *= invSY;
 
-		_m1$4.elements[ 8 ] *= invSZ;
-		_m1$4.elements[ 9 ] *= invSZ;
-		_m1$4.elements[ 10 ] *= invSZ;
+		_m1$3.elements[ 8 ] *= invSZ;
+		_m1$3.elements[ 9 ] *= invSZ;
+		_m1$3.elements[ 10 ] *= invSZ;
 
-		quaternion.setFromRotationMatrix( _m1$4 );
+		quaternion.setFromRotationMatrix( _m1$3 );
 
 		scale.x = sx;
 		scale.y = sy;
@@ -6813,7 +6813,7 @@ class Matrix4 {
 }
 
 const _v1$5 = /*@__PURE__*/ new Vector3();
-const _m1$4 = /*@__PURE__*/ new Matrix4();
+const _m1$3 = /*@__PURE__*/ new Matrix4();
 const _zero = /*@__PURE__*/ new Vector3( 0, 0, 0 );
 const _one = /*@__PURE__*/ new Vector3( 1, 1, 1 );
 const _x = /*@__PURE__*/ new Vector3();
@@ -7192,7 +7192,7 @@ let _object3DId = 0;
 
 const _v1$4 = /*@__PURE__*/ new Vector3();
 const _q1 = /*@__PURE__*/ new Quaternion();
-const _m1$3 = /*@__PURE__*/ new Matrix4();
+const _m1$2 = /*@__PURE__*/ new Matrix4();
 const _target = /*@__PURE__*/ new Vector3();
 
 const _position$3 = /*@__PURE__*/ new Vector3();
@@ -7446,7 +7446,7 @@ class Object3D extends EventDispatcher {
 
 		this.updateWorldMatrix( true, false );
 
-		return vector.applyMatrix4( _m1$3.copy( this.matrixWorld ).invert() );
+		return vector.applyMatrix4( _m1$2.copy( this.matrixWorld ).invert() );
 
 	}
 
@@ -7472,20 +7472,20 @@ class Object3D extends EventDispatcher {
 
 		if ( this.isCamera || this.isLight ) {
 
-			_m1$3.lookAt( _position$3, _target, this.up );
+			_m1$2.lookAt( _position$3, _target, this.up );
 
 		} else {
 
-			_m1$3.lookAt( _target, _position$3, this.up );
+			_m1$2.lookAt( _target, _position$3, this.up );
 
 		}
 
-		this.quaternion.setFromRotationMatrix( _m1$3 );
+		this.quaternion.setFromRotationMatrix( _m1$2 );
 
 		if ( parent ) {
 
-			_m1$3.extractRotation( parent.matrixWorld );
-			_q1.setFromRotationMatrix( _m1$3 );
+			_m1$2.extractRotation( parent.matrixWorld );
+			_q1.setFromRotationMatrix( _m1$2 );
 			this.quaternion.premultiply( _q1.invert() );
 
 		}
@@ -7593,17 +7593,17 @@ class Object3D extends EventDispatcher {
 
 		this.updateWorldMatrix( true, false );
 
-		_m1$3.copy( this.matrixWorld ).invert();
+		_m1$2.copy( this.matrixWorld ).invert();
 
 		if ( object.parent !== null ) {
 
 			object.parent.updateWorldMatrix( true, false );
 
-			_m1$3.multiply( object.parent.matrixWorld );
+			_m1$2.multiply( object.parent.matrixWorld );
 
 		}
 
-		object.applyMatrix4( _m1$3 );
+		object.applyMatrix4( _m1$2 );
 
 		this.add( object );
 
@@ -10516,7 +10516,7 @@ class Float64BufferAttribute extends BufferAttribute {
 
 let _id$2 = 0;
 
-const _m1$2 = /*@__PURE__*/ new Matrix4();
+const _m1$1 = /*@__PURE__*/ new Matrix4();
 const _obj = /*@__PURE__*/ new Object3D();
 const _offset = /*@__PURE__*/ new Vector3();
 const _box$2 = /*@__PURE__*/ new Box3();
@@ -10682,9 +10682,9 @@ class BufferGeometry extends EventDispatcher {
 
 	applyQuaternion( q ) {
 
-		_m1$2.makeRotationFromQuaternion( q );
+		_m1$1.makeRotationFromQuaternion( q );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -10694,9 +10694,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world x-axis
 
-		_m1$2.makeRotationX( angle );
+		_m1$1.makeRotationX( angle );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -10706,9 +10706,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world y-axis
 
-		_m1$2.makeRotationY( angle );
+		_m1$1.makeRotationY( angle );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -10718,9 +10718,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// rotate geometry around world z-axis
 
-		_m1$2.makeRotationZ( angle );
+		_m1$1.makeRotationZ( angle );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -10730,9 +10730,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// translate geometry
 
-		_m1$2.makeTranslation( x, y, z );
+		_m1$1.makeTranslation( x, y, z );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -10742,9 +10742,9 @@ class BufferGeometry extends EventDispatcher {
 
 		// scale geometry
 
-		_m1$2.makeScale( x, y, z );
+		_m1$1.makeScale( x, y, z );
 
-		this.applyMatrix4( _m1$2 );
+		this.applyMatrix4( _m1$1 );
 
 		return this;
 
@@ -47522,7 +47522,7 @@ const _position$1 = /*@__PURE__*/ new Vector3();
 const _quaternion$1 = /*@__PURE__*/ new Quaternion();
 const _scale$1 = /*@__PURE__*/ new Vector3();
 const _orientation$1 = /*@__PURE__*/ new Vector3();
-const _m1$1 = /*@__PURE__*/ new Matrix4();
+const _m1 = /*@__PURE__*/ new Matrix4();
 const _epsilon$1 = 1.0;
 class AudioListener extends Object3D {
 
@@ -47618,9 +47618,9 @@ class AudioListener extends Object3D {
 
 		this.timeDelta = this._clock.getDelta();
 
-		if ( ! this.matrixWorld.near( _m1$1, _epsilon$1 ) ) {
+		if ( ! this.matrixWorld.near( _m1, _epsilon$1 ) ) {
 
-			_m1$1.copy( this.matrixWorld.clone() );
+			_m1.copy( this.matrixWorld.clone() );
 
     		this.matrixWorld.decompose( _position$1, _quaternion$1, _scale$1 );
 			if ( ! isNaN( _position$1.x ) && ! isNaN( _position$1.y ) && ! isNaN( _position$1.z ) ) {
@@ -48059,8 +48059,7 @@ const _position = /*@__PURE__*/ new Vector3();
 const _quaternion = /*@__PURE__*/ new Quaternion();
 const _scale = /*@__PURE__*/ new Vector3();
 const _orientation = /*@__PURE__*/ new Vector3();
-const _m1 = /*@__PURE__*/ new Matrix4();
-const _epsilon = 1.0;
+const _epsilon = 0.5;
 
 class PositionalAudio extends Audio {
 
@@ -48071,6 +48070,7 @@ class PositionalAudio extends Audio {
 		this.panner = this.context.createPanner();
 		this.panner.panningModel = 'equalpower'; // 'HRTF';
 		this.panner.connect( this.gain );
+                this.lastMatrixWorld = new Matrix4();
 
 	}
 
@@ -48168,9 +48168,9 @@ class PositionalAudio extends Audio {
 
 		if ( this.hasPlaybackControl === true && this.isPlaying === false ) return;
 
-		if ( ! this.matrixWorld.near( _m1, _epsilon ) ) {
+		if ( ! this.matrixWorld.near( this.lastMatrixWorld, _epsilon ) ) {
 
-			_m1.copy( this.matrixWorld.clone() );
+			this.lastMatrixWorld.copy( this.matrixWorld.clone() );
 
 			this.matrixWorld.decompose( _position, _quaternion, _scale );
 			if ( ! isNaN( _position.x ) && ! isNaN( _position.y ) && ! isNaN( _position.z ) ) {
